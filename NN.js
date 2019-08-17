@@ -30,6 +30,15 @@ class NeuralNetwork {
     this.bias_H1_O.randomize();
     this.bias_H0_H1.randomize();
     this.bias_I_H0.randomize();
+
+    //Activation Function
+    this.f0 = tanH;
+    this.f1 = tanH;
+    this.f2 = softsign;
+
+    this.dF0 = dTanH;
+    this.dF1 = dTanH;
+    this.dF2 = dSoftsign;
   }
   loadNewConnections(myJson) {
     this.weight_I_H0.fromArray2D(myJson.weight1);
@@ -79,15 +88,15 @@ class NeuralNetwork {
 
     let hidden0Data = Matrix.multiply(this.weight_I_H0, inputsData);
     hidden0Data.add(this.bias_I_H0);
-    hidden0Data.map(tanH);
+    hidden0Data.map(this.f0);
 
     let hidden1Data = Matrix.multiply(this.weight_H0_H1, hidden0Data);
     hidden1Data.add(this.bias_H0_H1);
-    hidden1Data.map(tanH);
+    hidden1Data.map(this.f1);
 
     let outputData = Matrix.multiply(this.weight_H1_O, hidden1Data);
     outputData.add(this.bias_H1_O);
-    outputData.map(softsign);
+    outputData.map(this.f2);
 
     let outPutArray = outputData.toArray();
     let record = 0;
@@ -111,23 +120,23 @@ class NeuralNetwork {
     let hidden0Data = Matrix.multiply(this.weight_I_H0, inputsData);
     hidden0Data.add(this.bias_I_H0);
     let oldHidden0Data = hidden0Data;
-    hidden0Data.map(tanH);
+    hidden0Data.map(this.f0);
 
     //calc the second hiddenlayer
     let hidden1Data = Matrix.multiply(this.weight_H0_H1, hidden0Data);
     hidden1Data.add(this.bias_H0_H1);
     let oldHidden1Data = hidden1Data;
-    hidden1Data.map(tanH);
+    hidden1Data.map(this.f1);
 
     //calc the outputs
     let outputData = Matrix.multiply(this.weight_H1_O, hidden1Data);
     outputData.add(this.bias_H1_O);
     let oldOutputData = outputData;
-    outputData.map(tanH);
+    outputData.map(this.f2);
     //error = expected - outputData
     //gradients = learningRate * errorOutPut* f'(outputData)
     let errorOutPut = Matrix.subtract(expectedData, outputData);
-    let gradients = Matrix.map(oldOutputData, dTanH);
+    let gradients = Matrix.map(oldOutputData, this.dF0);
     gradients.multiply(errorOutPut);
     gradients.multiply(this.learningRate);
 
@@ -142,7 +151,7 @@ class NeuralNetwork {
     let hidden1T = Matrix.transpose(this.weight_H1_O);
     let errorHidden1 = Matrix.multiply(hidden1T, errorOutPut);
 
-    let gradientsHidden1 = Matrix.map(oldHidden1Data, dTanH);
+    let gradientsHidden1 = Matrix.map(oldHidden1Data, this.dF1);
     gradientsHidden1.multiply(errorHidden1);
     gradientsHidden1.multiply(this.learningRate);
 
@@ -155,7 +164,7 @@ class NeuralNetwork {
     let hiddenT = Matrix.transpose(this.weight_H0_H1);
     let errorHidden0 = Matrix.multiply(hiddenT, errorHidden1);
 
-    let gradientsHidden0 = Matrix.map(oldHidden0Data, dTanH);
+    let gradientsHidden0 = Matrix.map(oldHidden0Data, this.dF2);
     gradientsHidden0.multiply(errorHidden0);
     gradientsHidden0.multiply(this.learningRate);
 
